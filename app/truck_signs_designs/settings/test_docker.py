@@ -14,7 +14,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-
+DJANGO_HOST = env("DJANGO_HOST")
+if DJANGO_HOST:
+    ALLOWED_HOSTS.append(DJANGO_HOST)
 
 DATABASES = {
     'default': {
