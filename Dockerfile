@@ -1,4 +1,4 @@
-FROM python:3.8.10-slim-buster
+FROM python:3.8-slim
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     build-essential \
     libffi-dev \
-    netcat \
+    netcat-openbsd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
