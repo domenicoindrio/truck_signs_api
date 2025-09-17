@@ -25,6 +25,8 @@ After cloning the repo, navigate to the settings folder and create your own `.en
 cd truck_signs_api/app/truck_signs_designs/settings
 cp simple_env_config.env .env
 ```
+---
+
 ### Set up the environment variables in the .env file
 
 The important variables for this app to work are the following:
@@ -37,6 +39,8 @@ DOCKER_DB_PORT=5432                       # Postgres Database Port
 DOCKER_SECRET_KEY=mysupersecretkey        # Django secret key
 DJANGO_HOST=my_ip_address                 # webserver/production address
 ```
+---
+
 ### Set up Docker network
 
 To allow the app to communicate with the database container, set up a custom Docker Network:
@@ -44,10 +48,13 @@ To allow the app to communicate with the database container, set up a custom Doc
 docker network create truck_signs_network
 ```
 
+---
+
 ### Pull the latest Postgres image
 ```bash
 docker pull postgres
 ```
+---
 
 ### Create a Docker Volume for Postgres data
 
@@ -56,6 +63,8 @@ To ensure data persistence, create a Docker Volume to store Postgres data:
 docker volume create truck_signs_data
 ``` 
 Now, even if the database container stops, data will not be lost.
+
+---
 
 ### Start Postgres Container
 Now that the Docker network and volume are ready, start the Postgres container:
@@ -70,6 +79,8 @@ docker run -d \                                     # `-d` stays for detached mo
     -v truck_signs_data:/var/lib/postgresql/data \  # select the volume where the DB data is gonna be stored
     postgres    # Postgres Docker Image
 ```
+---
+
 ### Build the Django app Docker image
 Navigate to the root folder of the project and then run the following command:
 ```bash
@@ -81,6 +92,8 @@ docker build -t truck_signs_api .
 Altough the original repository specifies `Python 3.8.10`, the application building failed, probably because this specific version has reached end of life. As a result, Docker, reported `404` errors trying to fetch that version.
 To address this matter, the provided Docker File uses `python:3.8-slim`, which still ensures package availability and compatibility.
 
+---
+
 ### Create a Docker Volume for media files
 
 ```bash
@@ -88,6 +101,8 @@ docker volume create truck_sign_media
 ```
 > [!NOTE]  
 Step not needed for local development.
+
+---
 
 ### Start Django app container in production
 The Docker network is created, the database is ready, required volumes are created and the app is built.
@@ -110,6 +125,8 @@ docker logs -f truck_signs_api
 ``` 
 If everything looks good, and "Postgresql migrations finished" is present, you should see the `Login Page`of the admin panel at `http://<server_ip_address>:8020/admin`
 
+---
+
 ### Create a Django admin user
 
 Last step to interact with the app is to create a superuser:
@@ -117,6 +134,8 @@ Last step to interact with the app is to create a superuser:
 docker exec -it truck_signs_api python manage.py createsuperuser
 ```
 Follow the prompts to set username, email and password and then you can log in the admin panel.
+
+---
 
 ### Start Django app container in development
 For local testing and development, follow the same procedure, but skip the creation of the [Media File Docker Volume](#create-a-docker-volume-for-media-files) and use following run command instead of the [Production](#start-django-app-container-in-production) one and check the `entrypoint.sh` file:
