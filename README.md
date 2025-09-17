@@ -77,14 +77,17 @@ docker build -t truck_signs_api .
 # `-t` specifies the build image name
 # `.`  the dot specifies the build context
 ```
+> [!NOTE]  
+Altough the original repository specifies `Python 3.8.10`, the application building failed, probably because this specific version has reached end of life. As a result, Docker, reported `404` errors trying to fetch that version.
+To address this matter, the provided Docker File uses `python:3.8-slim`, which still ensures package availability and compatibility.
 
 ### Create a Docker Volume for media files
-> [Note!]  
-This step is only valid for Production environment, skip it for local development.
 
 ```bash
 docker volume create truck_sign_media
 ```
+> [!NOTE]  
+Step not needed for local development.
 
 ### Start Django app container in production
 The Docker network is created, the database is ready, required volumes are created and the app is built.
@@ -116,7 +119,7 @@ docker exec -it truck_signs_api python manage.py createsuperuser
 Follow the prompts to set username, email and password and then you can log in the admin panel.
 
 ### Start Django app container in development
-For local testing and development, follow the same procedure, but skip the creation of the [Media File Docker Volume](#create-a-docker-volume-for-media-files) and use following run command instead of the [Production](#start-django-app-container-in-production) one check the `entrypoint.sh` file:
+For local testing and development, follow the same procedure, but skip the creation of the [Media File Docker Volume](#create-a-docker-volume-for-media-files) and use following run command instead of the [Production](#start-django-app-container-in-production) one and check the `entrypoint.sh` file:
 
 ```bash
 docker run -it --rm \                # interactive mode and removes the container after stopped
@@ -127,6 +130,7 @@ docker run -it --rm \                # interactive mode and removes the containe
     truck_signs_api   # app image name
 ```
 The app should be running at http://localhost:8000/admin
+
 ## Description
 
 __Signs for Trucks__ is an online store to buy pre-designed vinyls with custom lines of letters (often call truck letterings). The store also allows clients to upload their own designs and to customize them on the website as well. Aside from the vinyls that are the main product of the store, clients can also purchase simple lettering vinyls with no truck logo, a fire extinguisher vinyl, and/or a vinyl with only the truck unit number (or another number selected by the client).
