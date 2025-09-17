@@ -10,13 +10,123 @@
 </div>
 
 ## Table of Contents
+* [Quickstart using Docker](#quickstart-using-docker)
 * [Description](#description)
 * [Installation](#installation)
 * [Screenshots of the Django Backend Admin Panel](#screenshots)
 * [Useful Links](#useful_links)
 
+## Quickstart using Docker
 
+### Create environment file
 
+After cloning the repo, navigate to the settings folder and create your own `.env` file
+```bash
+cd truck_signs_api/app/truck_signs_designs/settings
+cp simple_env_config.env .env
+```
+### Set up the environment variables in the .env file
+
+The important variables for this app to work are the following:
+```bash
+DOCKER_DB_NAME=truck_signs_db             # Postgres Database Name
+DOCKER_DB_USER=truck_signs                # Postgres Database User
+DOCKER_DB_PASSWORD=mysupersecretpassword  # Postgres Database Password
+DOCKER_DB_HOST=truck_signs_postgres       # Postgres Container Name
+DOCKER_DB_PORT=5432                       # Postgres Database Port
+DOCKER_SECRET_KEY=mysupersecretkey        # Django secret key
+DJANGO_HOST=my_ip_address                 # webserver/production address
+```
+### Set up Docker network
+
+To allow the app to communicate with the database container, set up a custom Docker Network:
+```bash
+docker network create truck_signs_network
+```
+
+### Pull the latest Postgres image
+```bash
+docker pull postgres
+```
+
+### Create a Docker Volume for Postgres data
+
+To ensure data persistence, create a Docker Volume to store Postgres data:
+```bash
+docker volume create truck_signs_data
+``` 
+Now, even if the database container stops, data will not be lost.
+
+### Start Postgres Container
+Now that the Docker network and volume are ready, start the Postgres container:
+```bash
+docker run -d \                                     # `-d` stays for detached mode, runs in background
+    --name truck_signs_postgres \                   # specific name for the container
+    --network truck_signs_network \                 # connect the container to custom network
+    --restart on-failure \                          # restarting policy, restart on error exit
+    -e POSTGRES_USER=truck_signs \                  # same as DOCKER_DB_USER, `-e` sets an environment variable inside the container
+    -e POSTGRES_DB=truck_signs_db \                 # same as DOCKER_DB_NAME
+    -e POSTGRES_PASSWORD=mysupersecretpassword \    # same as DOCKER_DB_PASSWORD
+    -v truck_signs_data:/var/lib/postgresql/data \  # select the volume where the DB data is gonna be stored
+    postgres    # Postgres Docker Image
+```
+### Build the Django app Docker image
+Navigate to the root folder of the project and then run the following command:
+```bash
+docker build -t truck_signs_api .
+# `-t` specifies the build image name
+# `.`  the dot specifies the build context
+```
+
+### Create a Docker Volume for media files
+> [Note!]  
+This step is only valid for Production environment, skip it for local development.
+
+```bash
+docker volume create truck_sign_media
+```
+
+### Start Django app container in production
+The Docker network is created, the database is ready, required volumes are created and the app is built.
+Time for starting the app container:
+
+```bash
+docker run -d \                        # `-d` stays for detached mode, runs in background
+    --name truck_signs_api \           # specific name for the container
+    --network truck_signs_network \    # connect the container to previously created network
+    --restart on-failure \             # restarting policy, restart on error exit
+    -p 8020:8000 \                     # port mapping, <host_port>:<container_port>
+    -v truck_signs_media:/app/media \  # select the volume where the media will be stored
+    truck_signs_api    # app image name
+```
+If everything worked, the app should now be running. Before opening the browser though, check the `logs` of the container app to see if migrations finished cleanly:
+
+```bash
+docker logs -f truck_signs_api
+# `-f`stream logs continuously in real time
+``` 
+If everything looks good, and "Postgresql migrations finished" is present, you should see the `Login Page`of the admin panel at `http://<server_ip_address>:8020/admin`
+
+### Create a Django admin user
+
+Last step to interact with the app is to create a superuser:
+```bash
+docker exec -it truck_signs_api python manage.py createsuperuser
+```
+Follow the prompts to set username, email and password and then you can log in the admin panel.
+
+### Start Django app container in development
+For local testing and development, follow the same procedure, but skip the creation of the [Media File Docker Volume](#create-a-docker-volume-for-media-files) and use following run command instead of the [Production](#start-django-app-container-in-production) one check the `entrypoint.sh` file:
+
+```bash
+docker run -it --rm \                # interactive mode and removes the container after stopped
+    --name truck_signs_api \         # specific name for the container
+    --network truck_signs_network \  # connect the container to previously created network
+    -p 8000:8000 \                   # port mapping, <host_port>:<container_port>
+    -v ${PWD}/app:/app               # bind-mount your local ${PWD}/app folder into the container /app
+    truck_signs_api   # app image name
+```
+The app should be running at http://localhost:8000/admin
 ## Description
 
 __Signs for Trucks__ is an online store to buy pre-designed vinyls with custom lines of letters (often call truck letterings). The store also allows clients to upload their own designs and to customize them on the website as well. Aside from the vinyls that are the main product of the store, clients can also purchase simple lettering vinyls with no truck logo, a fire extinguisher vinyl, and/or a vinyl with only the truck unit number (or another number selected by the client).

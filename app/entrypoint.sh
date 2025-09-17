@@ -15,7 +15,8 @@ python manage.py migrate
 
 echo "Postgresql migrations finished"
 
-gunicorn truck_signs_designs.wsgi:application --bind 0.0.0.0:8000
+# For production
+# gunicorn truck_signs_designs.wsgi:application --bind 0.0.0.0:8000
 
 # For local development 
-# python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
