@@ -21,7 +21,7 @@ echo "Postgresql migrations finished"
 if [ -z "$DJANGO_SUPERUSER_USERNAME" ] || [ -z "$DJANGO_SUPERUSER_EMAIL" ] || [ -z "$DJANGO_SUPERUSER_PASSWORD" ]; then
   echo "Superuser data is not provided/fully provided. Please re-check the .env file or runtime env variable"
   exit 1
-fi;
+fi
 
 # If all data is provided, auto-create/update superuser through Django shell
 echo "Checking superuser..."
