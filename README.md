@@ -57,13 +57,13 @@ docker volume create truck_signs_data
 
 ### Start Postgres Container
 ```bash
-docker run -d \                                     # `-d` detached mode, runs in background
-    --name truck_signs_postgres \                   # Specify a name for the container
-    --network truck_signs_network \                 # Connect the container to custom network
-    --restart on-failure \                          # Restarting policy, restart on error exit
-    --env-file .env \                               # Inject environment variables from .env file
-    -v truck_signs_data:/var/lib/postgresql/data \  # Volume mapping, <volume>:<path/inside/container>
-    postgres                                        # Postgres Docker image
+docker run -d \
+    --name truck_signs_postgres \
+    --network truck_signs_network \
+    --restart on-failure \
+    --env-file .env \
+    -v truck_signs_data:/var/lib/postgresql/data \
+    postgres
 ```
 ---
 
@@ -83,14 +83,14 @@ docker volume create truck_signs_media
 
 ### Start the Django app container in production
 ```bash
-docker run -d \                          # `-d` detached mode, runs in background
-    --name truck_signs_api \             # Specify a name for the container
-    --network truck_signs_network \      # Connect the container to custom network
-    --restart on-failure \               # Restarting policy, restart on error exit
-    --env-file .env \                    # Inject environment variables from .env file
-    -p 8020:8000 \                       # Port mapping, <host_port>:<container_port>
-    -v truck_signs_media:/app/media \    # Volume mapping, <volume>:<path/inside/container>
-    truck_signs_api                      # App image name
+docker run -d \
+    --name truck_signs_api \
+    --network truck_signs_network \
+    --restart on-failure \
+    --env-file .env \
+    -p 8020:8000 \
+    -v truck_signs_media:/app/media \
+    truck_signs_api
 ```
 If everything worked correctly, the app should now be running and a superuser will have been automatically created.  
 You can log in to the **admin panel** (using the credentials specified in the `.env` file) at: `http://<server_ip_address>:8020/admin`
@@ -102,14 +102,14 @@ Skip the creation of media volume.
 Make sure the `ENVIRONMENT` variable is set to `development` (either in the `.env` file or temporarily overriding it using `-e ENVIRONMENT=development`), and then run:
 
 ```bash
-docker run -it --rm \                    # Interactive mode and removes the container after stopped
-    --name truck_signs_api \             # Specify a name for the container
-    --network truck_signs_network \      # Connect the container to custom network
-    --env-file .env \                    # Inject environment variables from .env file
-    -e ENVIRONMENT=development \         # Omit if set in .env
-    -p 8020:8000 \                       # Port mapping, <host_port>:<container_port>
-    -v ${PWD}/app:/app \                 # Bind-mount local ${PWD}/app folder into the container /app
-    truck_signs_api                      # App image name
+docker run -it --rm \
+    --name truck_signs_api \
+    --network truck_signs_network \
+    --env-file .env \
+    -e ENVIRONMENT=development \
+    -p 8020:8000 \
+    -v ${PWD}/app:/app \
+    truck_signs_api
 ```
 Once the container is running, the app will be accessible at http://localhost:8020/admin
 
@@ -141,6 +141,40 @@ Keep your own `.env` file in **the project's root**, outside the `/app` folder, 
 
 - The **Docker file** in the repository root directory, defines all the build instructions required for creating the application image.
 
+- **Used `docker run` commands with details**:
+    - Start Postgres Container
+    ```bash
+    docker run -d \                                     # `-d` detached mode, runs in background
+        --name truck_signs_postgres \                   # Specify a name for the container
+        --network truck_signs_network \                 # Connect the container to custom network
+        --restart on-failure \                          # Restarting policy, restart on error exit
+        --env-file .env \                               # Inject environment variables from .env file
+        -v truck_signs_data:/var/lib/postgresql/data \  # Volume mapping, <volume>:<path/inside/container>
+        postgres                                        # Postgres Docker image
+    ```
+    - Start app container in production
+    ```bash
+    docker run -d \                          # `-d` detached mode, runs in background
+        --name truck_signs_api \             # Specify a name for the container
+        --network truck_signs_network \      # Connect the container to custom network
+        --restart on-failure \               # Restarting policy, restart on error exit
+        --env-file .env \                    # Inject environment variables from .env file
+        -p 8020:8000 \                       # Port mapping, <host_port>:<container_port>
+        -v truck_signs_media:/app/media \    # Volume mapping, <volume>:<path/inside/container>
+        truck_signs_api                      # App image name
+    ```
+    - Start app container in development
+    ```bash
+    docker run -it --rm \                    # Interactive mode and removes the container after stopped
+        --name truck_signs_api \             # Specify a name for the container
+        --network truck_signs_network \      # Connect the container to custom network
+        --env-file .env \                    # Inject environment variables from .env file
+        -e ENVIRONMENT=development \         # Omit if set in .env
+        -p 8020:8000 \                       # Port mapping, <host_port>:<container_port>
+        -v ${PWD}/app:/app \                 # Bind-mount local ${PWD}/app folder into the container /app
+        truck_signs_api                      # App image name
+    ```
+
 - **Startup behavior**:  
 On startup, the container waits for the PostgreSQL service to become active, applies migrations, collects static files, and automatically creates or updates a superuser. Based on the `ENVIRONMENT` variable, it will then launch either **Gunicorn** or the **Django development server**.
   - If any superuser variables (**DJANGO_SUPERUSER_USERNAME**, **DJANGO_SUPERUSER_EMAIL**, or **DJANGO_SUPERUSER_PASSWORD**) are missing, the container will stop startup.
@@ -167,6 +201,8 @@ Even if the container application crashes or is deleted, the data in the volumes
 
     * In development mode, creating volumes for media files is not needed, since the host's local `${PWD}/app` folder is bind mounted into the container `/app`.
     This allows changes to happen live, so edits on your host are immediately reflected inside the container.
+
+
 
 > [!NOTE]  
 Altough the original repository specifies **Python 3.8.10**, the application building failed, because this specific version has reached end of life. As a result, Docker, reported `404` errors trying to fetch that version.
