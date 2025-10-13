@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import environ
+
+env = environ.Env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +27,8 @@ TEMPLATES_DIR = os.path.join(ROOT_BASE_DIR,'templates')
 
 
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1',]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+
 
 
 # Application definition

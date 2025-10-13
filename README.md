@@ -27,25 +27,32 @@ It includes a PostgreSQL database, Docker configurations for simplified deployme
 __Signs for Trucks__ is an online store to buy pre-designed vinyls with custom lines of letters (often call truck letterings). The store also allows clients to upload their own designs and to customize them on the website as well. Aside from the vinyls that are the main product of the store, clients can also purchase simple lettering vinyls with no truck logo, a fire extinguisher vinyl, and/or a vinyl with only the truck unit number (or another number selected by the client).
 
 ## Quickstart using Docker
-### Create and setup the `.env` file
-After cloning the repository, remain in the project’s root folder and create your own `.env` file by copying the [provided template](./app/truck_signs_designs/settings/simple_env_config.env).  
-Fill in the `changeme` fields, leave the rest as it is, and you're ready to go:
+### Prerequisites
+- Docker (installed and running)
+- A terminal or shell environment of your choice
+---
+
+### Clone the repository
 ```bash
+git clone https://github.com/domenicoindrio/truck_signs_api.git
 cd truck_signs_api/
-cp app/truck_signs_designs/settings/simple_env_config.env .env
-# nano .env to edit changeme fields...
 ```
+---
+
+### Create and setup the `.env` file
+From the project's root directory, create your own `.env` file by copying the [provided template](./app/truck_signs_designs/settings/simple_env_config.env):  
+
+```bash
+cp app/truck_signs_designs/settings/simple_env_config.env .env
+nano .env
+```
+Fill in the `changeme` fields as needed, and you're ready to go.
+
 ---
 
 ### Set up a Docker network
 ```bash
 docker network create truck_signs_network
-```
----
-
-### Pull the latest Postgres image
-```bash
-docker pull postgres
 ```
 ---
 
@@ -75,7 +82,6 @@ docker build -t truck_signs_api .
 ---
 
 ### Create a Docker volume for media files
-
 ```bash
 docker volume create truck_signs_media
 ```
@@ -96,22 +102,6 @@ If everything worked correctly, the app should now be running and a superuser wi
 You can log in to the **admin panel** (using the credentials specified in the `.env` file) at: `http://<server_ip_address>:8020/admin`
 
 ---
-
-### Start the Django app container in development
-Skip the creation of media volume.  
-Make sure the `ENVIRONMENT` variable is set to `development` (either in the `.env` file or temporarily overriding it using `-e ENVIRONMENT=development`), and then run:
-
-```bash
-docker run -it --rm \
-    --name truck_signs_api \
-    --network truck_signs_network \
-    --env-file .env \
-    -e ENVIRONMENT=development \
-    -p 8020:8000 \
-    -v ${PWD}/app:/app \
-    truck_signs_api
-```
-Once the container is running, the app will be accessible at http://localhost:8020/admin
 
 ## Usage
 This section will cover some useful tips when trying to interact with the Docker section of this repository:
@@ -141,7 +131,7 @@ Keep your own `.env` file in **the project's root**, outside the `/app` folder, 
 
 - The **Docker file** in the repository root directory, defines all the build instructions required for creating the application image.
 
-- **Used `docker run` commands with details**:
+- **Used `docker run` commands in details**:
     - Start Postgres Container
     ```bash
     docker run -d \                                     # `-d` detached mode, runs in background
@@ -163,7 +153,9 @@ Keep your own `.env` file in **the project's root**, outside the `/app` folder, 
         -v truck_signs_media:/app/media \    # Volume mapping, <volume>:<path/inside/container>
         truck_signs_api                      # App image name
     ```
-    - Start app container in development
+
+- **Development mode**  
+For local testing, follow the same procedure, but skip creating the media volume and run the container using the command below instead:
     ```bash
     docker run -it --rm \                    # Interactive mode and removes the container after stopped
         --name truck_signs_api \             # Specify a name for the container
@@ -174,6 +166,7 @@ Keep your own `.env` file in **the project's root**, outside the `/app` folder, 
         -v ${PWD}/app:/app \                 # Bind-mount local ${PWD}/app folder into the container /app
         truck_signs_api                      # App image name
     ```
+    Ensure that `ENVIRONMENT` variable is set to `development` (either in the `.env` file or by temporarily overriding it with `-e ENVIRONMENT=development`).
 
 - **Startup behavior**:  
 On startup, the container waits for the PostgreSQL service to become active, applies migrations, collects static files, and automatically creates or updates a superuser. Based on the `ENVIRONMENT` variable, it will then launch either **Gunicorn** or the **Django development server**.
@@ -201,8 +194,6 @@ Even if the container application crashes or is deleted, the data in the volumes
 
     * In development mode, creating volumes for media files is not needed, since the host's local `${PWD}/app` folder is bind mounted into the container `/app`.
     This allows changes to happen live, so edits on your host are immediately reflected inside the container.
-
-
 
 > [!NOTE]  
 Altough the original repository specifies **Python 3.8.10**, the application building failed, because this specific version has reached end of life. As a result, Docker, reported `404` errors trying to fetch that version.

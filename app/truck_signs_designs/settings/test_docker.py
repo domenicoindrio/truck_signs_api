@@ -8,9 +8,7 @@ env = environ.Env()
 SECRET_KEY = env("DOCKER_SECRET_KEY")
 DEBUG = False
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 
 DJANGO_HOST = env("DJANGO_HOST")
 if DJANGO_HOST:
