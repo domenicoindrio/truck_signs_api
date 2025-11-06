@@ -2,6 +2,8 @@
 This repository contains the source code for a Django-based backend service that powers a truck signs webstore.  
 It includes a PostgreSQL database, Docker configurations for simplified deployment, as well as detailed documentation about the application and its local Django setup.
 
+This repository was created during my training at the *Developer Academy*.
+
 <div align="center">
 
 ![Truck Signs](./screenshots/Truck_Signs_logo.png)
